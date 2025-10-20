@@ -52,11 +52,8 @@ class ChatInterface extends HTMLElement {
     }
 
     setupEventListeners() {
-        // Select from DOM
-        const userInput = this.document.getElementById('user-input');
-        const sendBtn = this.document.getElementById('send-btn');
 
-        sendBtn.addEventListener('click', () => {
+        this.elements.sendBtn.addEventListener('click', () => {
             this.log("Send button clicked");
             let userMessage = this.processUserMessage(userInput.value);
             if (userMessage) {
@@ -69,6 +66,22 @@ class ChatInterface extends HTMLElement {
             this.updateSendButtonState(); // Update button state after sending
         });
 
+        // Clear Chat
+        this.elements.clearChatButton.addEventListener('click', () => {
+
+        })
+
+        // Export Chat
+        this.elements.exportChatButton.addEventListener('click', () => {
+
+        })
+
+        // Import Chat
+        this.elements.importChatButton.addEventListener('click', () => {
+
+        })
+
+
         // Listen for input changes (typing, pasting, deleting)
         userInput.addEventListener('input', () => this.updateSendButtonState());
 
@@ -79,6 +92,35 @@ class ChatInterface extends HTMLElement {
                 sendBtn.click();
             }
         });
+    }
+
+    /**
+     * Appends a new message to the chat container
+     * Creates and styles message elements, generates bot responses
+     * @param {string} message - The message content to display
+     * @param {'user'|'bot'} sender - The type of sender (user or bot)
+     * @returns {void}
+     */
+    appendMessageToChat(message, sender) {
+        const messageContainer = this.document.getElementById('message-container');
+
+        this.log("Appending Message to Chatbox")
+        let newMessageElement = this.document.createElement('li');
+        if (sender === 'user') {
+            newMessageElement.classList.add('user-message');
+            newMessageElement.innerHTML = message;
+            messageContainer.appendChild(newMessageElement);
+
+        } else {
+
+            newMessageElement.classList.add('bot-output');
+            let botResponse = this.getBotResponse(message);
+            newMessageElement.innerHTML = botResponse;
+            messageContainer.appendChild(newMessageElement);
+        }
+
+        // Scroll to the bottom of the chat
+        messageContainer.scrollTop = messageContainer.scrollHeight;
     }
 
     /**
@@ -120,34 +162,7 @@ class ChatInterface extends HTMLElement {
         }
     }
 
-    /**
-     * Appends a new message to the chat container
-     * Creates and styles message elements, generates bot responses
-     * @param {string} message - The message content to display
-     * @param {'user'|'bot'} sender - The type of sender (user or bot)
-     * @returns {void}
-     */
-    appendMessageToChat(message, sender) {
-        const messageContainer = this.document.getElementById('message-container');
 
-        this.log("Appending Message to Chatbox")
-        let newMessageElement = this.document.createElement('li');
-        if (sender === 'user') {
-            newMessageElement.classList.add('user-message');
-            newMessageElement.innerHTML = message;
-            messageContainer.appendChild(newMessageElement);
-
-        } else {
-
-            newMessageElement.classList.add('bot-output');
-            let botResponse = this.getBotResponse(message);
-            newMessageElement.innerHTML = botResponse;
-            messageContainer.appendChild(newMessageElement);
-        }
-
-        // Scroll to the bottom of the chat
-        messageContainer.scrollTop = messageContainer.scrollHeight;
-    }
 
     /**
      * Renders the component's HTML structure and styles
