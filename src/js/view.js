@@ -18,6 +18,15 @@ class ChatInterface extends HTMLElement {
      */
     constructor() {
         super();
+        this.elements = {
+            messageContainer: document.getElementById('message-container'),
+            userInput: document.getElementById('user-input'),
+            sendButton: document.getElementById('send-btn'),
+            clearChatButton: document.getElementById('clear-chat-btn'),
+            exportChatButton: document.getElementById('export-chat-btn'),
+            importChatButton: document.getElementById('import-chat-btn'),
+        }
+
         /** @type {boolean} Debug flag for console logging */
         this.DEBUG = false;
     }
@@ -30,6 +39,7 @@ class ChatInterface extends HTMLElement {
     connectedCallback() {
         this.render();
         this.updateSendButtonState();
+        this.setupEventListeners();
     }
 
     /**
@@ -39,6 +49,36 @@ class ChatInterface extends HTMLElement {
      */
     log(msg) {
         if (this.DEBUG) console.log(msg);
+    }
+
+    setupEventListeners() {
+        // Select from DOM
+        const userInput = this.document.getElementById('user-input');
+        const sendBtn = this.document.getElementById('send-btn');
+
+        sendBtn.addEventListener('click', () => {
+            this.log("Send button clicked");
+            let userMessage = this.processUserMessage(userInput.value);
+            if (userMessage) {
+                this.appendMessageToChat(userMessage, 'user');
+                userInput.value = '';
+                this.appendMessageToChat(userMessage, 'bot');
+            } else {
+                alert("Please enter a valid message.");
+            }
+            this.updateSendButtonState(); // Update button state after sending
+        });
+
+        // Listen for input changes (typing, pasting, deleting)
+        userInput.addEventListener('input', () => this.updateSendButtonState());
+
+        // Handle Enter key press
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendBtn.click();
+            }
+        });
     }
 
     /**
