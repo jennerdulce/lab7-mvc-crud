@@ -47,7 +47,23 @@ export class SimpleChatModel extends EventTarget {
     }
 
     clearChat() {
+        console.log("Clearing chat messages on localStorage.. ");
         
+        // Clear the messages array
+        this.messages = [];
+        
+        // Remove from localStorage
+        try {
+            localStorage.removeItem('chatHistory');
+            console.log("Chat history removed from localStorage");
+
+        } catch (e) {
+            console.error(`Error clearing localStorage: ${e}`);
+            
+        }
+        
+        // Dispatch event to notify that chat was cleared
+        this.dispatchChatCleared();
     }
 
     exportChat() {
@@ -87,9 +103,10 @@ export class SimpleChatModel extends EventTarget {
 
     dispatchChatCleared() {
         this.dispatchEvent(new CustomEvent('chatCleared', {
-            // Dispatch an Alert
-
-        }))
+            detail: {
+                message: "Chat has been cleared successfully"
+            }
+        }));
     }
 
     dispatchChatExported() {

@@ -15,7 +15,10 @@ export class SimpleChatController {
             const message = e.detail.message;
             const isUser = message.isUser
             this.view.appendMessageToChat(message, message.isUser);
+        });
 
+        this.model.addEventListener('chatCleared', (e) => {
+            this.view.clearChatMessages();
         });
     }
 
@@ -25,6 +28,11 @@ export class SimpleChatController {
         this.view.addEventListener('sendMessage', (e) => {
             const detailObj = e.detail;
             this.model.addMessage(detailObj.message, detailObj.isUser);
+        });
+
+        // Clear Chat
+        this.view.addEventListener('clearChat', (e) => {
+            this.model.clearChat();
         });
     }
 }

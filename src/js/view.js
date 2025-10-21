@@ -70,14 +70,16 @@ export class SimpleChatView extends EventTarget {
 
             } else {
                 alert("Please enter a valid message.");
-                
+
             }
         });
 
         // Clear Chat
         this.elements.clearChatButton.addEventListener('click', () => {
             this.log("Clear chat clicked");
-            // Clear chat functionality can be added here
+            if (confirm("Are you sure you want to clear all chat messages? This cannot be undone.")) {
+                this.dispatchClearChat();
+            }
         });
 
         // Export Chat
@@ -125,6 +127,12 @@ export class SimpleChatView extends EventTarget {
         }, 2000);
     }
 
+    dispatchClearChat() {
+        this.dispatchEvent(new CustomEvent('clearChat', {
+            detail: {}
+        }));
+    }
+
     /**
      * Appends a new message to the chat container
      * Creates and styles message elements, generates bot responses
@@ -160,6 +168,17 @@ export class SimpleChatView extends EventTarget {
 
     removeMessageFromChat(message) {
         // TODO: Implement message removal functionality
+    }
+
+    clearChatMessages() {
+        const messageContainer = this.elements.messageContainer;
+        const messages = messageContainer.querySelectorAll('li');
+        
+        for (let i = 0; i < messages.length; i++) {
+            messages[i].remove();
+        }
+        
+        this.log("Chat messages cleared from UI");
     }
 
     /**
@@ -242,11 +261,7 @@ export class SimpleChatView extends EventTarget {
                     <button id="clear-chat-btn">🗑️ Clear Chat</button>
                 </div>
                 <ul id="message-container">
-                    <li class="bot-output">
-                        <div class="chat-message-content">
-                            <p>Hello! I'm here to chat with you. How can I help you</p>
-                        </div>
-                    </li>
+                    
                 </ul>
                 <div id="user-input-container">
                     <textarea name="" id="user-input" placeholder="Type a message..."></textarea>
