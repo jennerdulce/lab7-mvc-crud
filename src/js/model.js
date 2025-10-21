@@ -84,8 +84,37 @@ export class SimpleChatModel extends EventTarget {
         console.log('Chat exported as text file');
     }
 
-    importChat() {
-
+    importChat(importedData) {
+        try {
+            console.log("Importing chat messages:", importedData);
+            
+            // Clear current messages
+            this.messages = [];
+            
+            // Import the messages (assuming importedData is an array of messages)
+            if (Array.isArray(importedData)) {
+                this.messages = importedData;
+            } else {
+                throw new Error("Invalid data format: expected an array of messages");
+            }
+            
+            // Save to localStorage
+            this.saveToLocalStorage();
+            
+            // Dispatch events for each imported message to update the UI
+            this.messages.forEach(message => {
+                this.dispatchMessageAdded(message);
+            });
+            
+            // Dispatch import completion event
+            this.dispatchChatImported();
+            
+            console.log(`Successfully imported ${this.messages.length} messages`);
+            
+        } catch (error) {
+            console.error("Error importing chat:", error);
+            alert("Error importing chat: " + error.message);
+        }
     }
 
     saveToLocalStorage() {
@@ -132,9 +161,11 @@ export class SimpleChatModel extends EventTarget {
 
     dispatchChatImported() {
         this.dispatchEvent(new CustomEvent('chatImported', {
-            // Dispatch an Alert
-
-        }))
+            detail: {
+                message: "Chat imported successfully",
+                importedMessages: this.messages
+            }
+        }));
     }
 }
 

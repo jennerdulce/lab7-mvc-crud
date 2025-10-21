@@ -91,7 +91,7 @@ export class SimpleChatView extends EventTarget {
         // Import Chat
         this.elements.importChatButton.addEventListener('click', () => {
             this.log("Import chat clicked");
-            // Import chat functionality can be added here
+            this.openFileImportDialog();
         });
 
         // Listen for input changes (typing, pasting, deleting)
@@ -139,6 +139,50 @@ export class SimpleChatView extends EventTarget {
         }));
     }
 
+    dispatchImportChat(importedData) {
+        this.dispatchEvent(new CustomEvent('importChat', {
+            detail: { importedData: importedData }
+        }));
+    }
+
+    openFileImportDialog() {
+        // Create a hidden file input element
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = '.txt,.json';
+        fileInput.style.display = 'none';
+        
+        // Handle file selection
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                this.readImportFile(file);
+            }
+        });
+        
+        // Trigger file dialog
+        document.body.appendChild(fileInput);
+        fileInput.click();
+        document.body.removeChild(fileInput);
+    }
+
+    readImportFile(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const fileContent = e.target.result;
+                const importedData = JSON.parse(fileContent);
+                this.dispatchImportChat(importedData);
+            } catch (error) {
+                alert('Error reading file: Invalid JSON format');
+                console.error('Import error:', error);
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    
+
     /**
      * Appends a new message to the chat container
      * Creates and styles message elements, generates bot responses
@@ -185,6 +229,15 @@ export class SimpleChatView extends EventTarget {
         }
         
         this.log("Chat messages cleared from UI");
+    }
+
+    displayImportedMessages(messages) {
+        this.log("Displaying imported messages");
+        this.clearChatMessages();
+        
+        messages.forEach(message => {
+            this.appendMessageToChat(message, message.isUser);
+        });
     }
 
     /**

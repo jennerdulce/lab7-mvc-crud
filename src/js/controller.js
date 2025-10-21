@@ -20,6 +20,11 @@ export class SimpleChatController {
         this.model.addEventListener('chatCleared', (e) => {
             this.view.clearChatMessages();
         });
+
+        this.model.addEventListener('chatImported', (e) => {
+            const importedMessages = e.detail.importedMessages;
+            this.view.displayImportedMessages(importedMessages);
+        });
     }
 
     //  View Event Listeners
@@ -38,6 +43,12 @@ export class SimpleChatController {
         // Export Chat
         this.view.addEventListener('exportChat', (e) => {
             this.model.exportChat();
+        });
+
+        // Import Chat
+        this.view.addEventListener('importChat', (e) => {
+            const importedData = e.detail.importedData;
+            this.model.importChat(importedData);
         });
     }
 }
