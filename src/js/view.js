@@ -11,13 +11,33 @@
  * with shadow DOM encapsulation and graceful degradation
  * @extends HTMLElement
  */
-class ChatInterface extends HTMLElement {
+export class SimpleChatView extends EventTarget {
     /**
-     * Creates an instance of ChatInterface
-     * Initializes shadow DOM and debug settings
+     * Creates an instance of SimpleChatView
+     * Regular component (not web component)
      */
     constructor() {
         super();
+        this.elements = {};
+        /** @type {boolean} Debug flag for console logging */
+        this.DEBUG = false;
+        this.container = null;
+    }
+
+    /**
+     * Initialize the view after rendering
+     * @returns {void}
+     */
+    init() {
+        this.cacheElements();
+        this.updateSendButtonState();
+        this.setupEventListeners();
+    }
+
+    /**
+     * Cache DOM elements after they're rendered
+     */
+    cacheElements() {
         this.elements = {
             messageContainer: document.getElementById('message-container'),
             userInput: document.getElementById('user-input'),
@@ -25,21 +45,7 @@ class ChatInterface extends HTMLElement {
             clearChatButton: document.getElementById('clear-chat-btn'),
             exportChatButton: document.getElementById('export-chat-btn'),
             importChatButton: document.getElementById('import-chat-btn'),
-        }
-
-        /** @type {boolean} Debug flag for console logging */
-        this.DEBUG = false;
-    }
-
-    /**
-     * Called when the element is inserted into the DOM
-     * Initializes the component's render, state, and event listeners
-     * @returns {void}
-     */
-    connectedCallback() {
-        this.render();
-        this.updateSendButtonState();
-        this.setupEventListeners();
+        };
     }
 
     /**
@@ -52,83 +58,108 @@ class ChatInterface extends HTMLElement {
     }
 
     setupEventListeners() {
-
-        this.elements.sendBtn.addEventListener('click', () => {
+        // Send button click
+        this.elements.sendButton.addEventListener('click', () => {
             this.log("Send button clicked");
-            let userMessage = this.processUserMessage(userInput.value);
+            let userMessage = this.processUserMessage(this.elements.userInput.value);
+
             if (userMessage) {
-                this.appendMessageToChat(userMessage, 'user');
-                userInput.value = '';
-                this.appendMessageToChat(userMessage, 'bot');
+                this.dispatchSendMessage(userMessage);
+                this.elements.userInput.value = ''; // Clear input
+                this.updateSendButtonState(); // Update button state after sending
+
             } else {
                 alert("Please enter a valid message.");
+                
             }
-            this.updateSendButtonState(); // Update button state after sending
         });
 
         // Clear Chat
         this.elements.clearChatButton.addEventListener('click', () => {
-
-        })
+            this.log("Clear chat clicked");
+            // Clear chat functionality can be added here
+        });
 
         // Export Chat
         this.elements.exportChatButton.addEventListener('click', () => {
-
-        })
+            this.log("Export chat clicked");
+            // Export chat functionality can be added here
+        });
 
         // Import Chat
         this.elements.importChatButton.addEventListener('click', () => {
-
-        })
-
+            this.log("Import chat clicked");
+            // Import chat functionality can be added here
+        });
 
         // Listen for input changes (typing, pasting, deleting)
-        userInput.addEventListener('input', () => this.updateSendButtonState());
+        this.elements.userInput.addEventListener('input', () => this.updateSendButtonState());
 
         // Handle Enter key press
-        userInput.addEventListener('keypress', (e) => {
+        this.elements.userInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                sendBtn.click();
+                this.elements.sendButton.click();
             }
         });
+    }
+
+    dispatchSendMessage(message) {
+        // Dispatch sendMessage event
+        this.dispatchEvent(new CustomEvent('sendMessage', {
+            detail: {
+                message: message,
+                isUser: true
+            }
+        }));
+
+        // Immediate Bot Resposne
+        setTimeout(() => {
+            let botResponse = this.getBotResponse(message);
+            this.dispatchEvent(new CustomEvent('sendMessage', {
+                detail: {
+                    message: botResponse,
+                    isUser: false
+                }
+            }));
+        }, 2000);
     }
 
     /**
      * Appends a new message to the chat container
      * Creates and styles message elements, generates bot responses
-     * @param {string} message - The message content to display
-     * @param {'user'|'bot'} sender - The type of sender (user or bot)
+     * @param {Object} messageObj - The message object with content and user info
      * @returns {void}
      */
-    appendMessageToChat(message, sender) {
-        const messageContainer = this.document.getElementById('message-container');
+    appendMessageToChat(messageObj, isUser) {
+        this.log("Appending Message to Chatbox");
 
-        this.log("Appending Message to Chatbox")
-        let newMessageElement = this.document.createElement('li');
-        if (sender === 'user') {
+        // Clear input
+        this.elements.userInput.value = '';
+
+        let newMessageElement = document.createElement('li');
+
+        if (isUser) {
             newMessageElement.classList.add('user-message');
-            newMessageElement.innerHTML = message;
-            messageContainer.appendChild(newMessageElement);
 
         } else {
-
             newMessageElement.classList.add('bot-output');
-            let botResponse = this.getBotResponse(message);
-            newMessageElement.innerHTML = botResponse;
-            messageContainer.appendChild(newMessageElement);
+
         }
 
+        newMessageElement.innerHTML = messageObj.message;
+        this.elements.messageContainer.appendChild(newMessageElement);
+
         // Scroll to the bottom of the chat
-        messageContainer.scrollTop = messageContainer.scrollHeight;
+        this.elements.messageContainer.scrollTop = this.elements.messageContainer.scrollHeight;
     }
 
     updateMessageInChat(message) {
-
+        // TODO: Implement message update functionality
     }
 
     removeMessageFromChat(message) {
-
+        // TODO: Implement message removal functionality
     }
 
     /**
@@ -154,8 +185,8 @@ class ChatInterface extends HTMLElement {
      * @returns {void}
      */
     updateSendButtonState() {
-        const userInput = this.document.getElementById('user-input');
-        const sendBtn = this.document.getElementById('send-btn');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
 
         if (userInput.value.trim() !== '') {
             if (!sendBtn.classList.contains('hasContent')) {
@@ -170,15 +201,36 @@ class ChatInterface extends HTMLElement {
         }
     }
 
-
+    /**
+     * Generate a simple bot response (placeholder)
+     * @param {string} userMessage - The user's message
+     * @returns {string} Bot response
+     */
+    getBotResponse(userMessage) {
+        // Simple bot response logic - can be enhanced later
+        const responses = [
+            "That's interesting! Tell me more.",
+            "I see what you mean.",
+            "Thanks for sharing that with me.",
+            "How do you feel about that?",
+            "That's a great point!"
+        ];
+        return responses[Math.floor(Math.random() * responses.length)];
+    }
 
     /**
      * Renders the component's HTML structure and styles
      * Sets up the shadow DOM with CSS imports and chat interface
      * @returns {void}
      */
-    render() {
-        this.innerHTML = `
+    render(containerId) {
+        const container = document.querySelector(containerId);
+        if (!container) {
+            console.error(`Container ${containerId} not found`);
+            return;
+        }
+
+        container.innerHTML = `
             <div id="chat-box">
                 <div id="chat-box-header-container">
                     <h3 id="chat-box-title">Chat Assistant</h3>
@@ -210,12 +262,8 @@ class ChatInterface extends HTMLElement {
                 </div>
             </div>
         `;
+
+        // Initialize after rendering
+        this.init();
     }
 }
-
-/**
- * Register the ChatInterface as a custom HTML element
- * Allows usage as <simple-chat></simple-chat> in HTML
- * @type {void}
- */
-customElements.define('simple-chat', ChatInterface);

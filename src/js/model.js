@@ -1,5 +1,6 @@
-class SimpleChatModel extends EventTarget {
+export class SimpleChatModel extends EventTarget {
     constructor() {
+        super();
         this.messages = [];
     }
 
@@ -21,8 +22,20 @@ class SimpleChatModel extends EventTarget {
         }
     }
 
-    addMessage(message, isUser = false) {
+    addMessage(messageText, isUser, isEdited = false) {
+        console.log("Adding message to localStorage: ", messageText);
+        const message = {
+            id: Date.now().toString() + Math.random(),
+            message: messageText,
+            isUser: isUser,
+            timestamp: new Date().toISOString(),
+            isEdited: isEdited
+        };
 
+        this.messages.push(message);
+        this.saveToLocalStorage();
+        this.dispatchMessageAdded(message);
+        console.log("Message added: ", message);
     }
 
     updateMessage(messageID, newMessage) {
@@ -45,9 +58,12 @@ class SimpleChatModel extends EventTarget {
 
     }
 
-    generateMessageID() {
-        // Generate a random 12-digit ID (100000000000 to 999999999999)
-        return Math.floor(Math.random() * 900000000000) + 100000000000;
+    saveToLocalStorage() {
+        try {
+            localStorage.setItem('chatHistory', JSON.stringify(this.messages));
+        } catch (e) {
+            console.error(`Error saving to storage: ${e}`)
+        }
     }
 
     //  Custom Events for Dispatching
