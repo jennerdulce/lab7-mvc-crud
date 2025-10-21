@@ -43,7 +43,25 @@ export class SimpleChatModel extends EventTarget {
     }
 
     deleteMessage(messageId) {
-
+        console.log("Deleting message with ID:", messageId);
+        
+        // Find and remove message from array
+        const messageIndex = this.messages.findIndex(message => message.id === messageId);
+        
+        if (messageIndex !== -1) {
+            // Remove message from array
+            this.messages.splice(messageIndex, 1);
+            
+            // Update localStorage
+            this.saveToLocalStorage();
+            
+            // Dispatch delete event
+            this.dispatchMessageDeleted(messageId);
+            
+            console.log(`Message ${messageId} deleted successfully`);
+        } else {
+            console.warn(`Message with ID ${messageId} not found`);
+        }
     }
 
     clearChat() {

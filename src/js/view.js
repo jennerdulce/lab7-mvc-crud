@@ -104,6 +104,49 @@ export class SimpleChatView extends EventTarget {
                 this.elements.sendButton.click();
             }
         });
+
+        // Handle message action buttons (edit/delete) - event delegation
+        this.elements.messageContainer.addEventListener('click', (e) => {
+            if (e.target.classList.contains('message-action-btn')) {
+                const messageId = e.target.getAttribute('data-message-id');
+                const action = e.target.getAttribute('data-action');
+                
+                if (action === 'delete') {
+                    if (confirm('Are you sure you want to delete this message?')) {
+                        this.dispatchDeleteMessage(messageId);
+                    }
+                } else if (action === 'edit') {
+                    // TODO: Implement edit functionality
+                    console.log('Edit functionality coming soon...');
+                }
+                
+                // Hide actions after clicking
+                this.hideAllMessageActions();
+            }
+        });
+
+        // Handle clicking on user messages to show action buttons
+        this.elements.messageContainer.addEventListener('click', (e) => {
+            const userMessage = e.target.closest('.user-message-interactive');
+            if (userMessage && !e.target.classList.contains('message-action-btn')) {
+                this.showMessageActions(userMessage);
+            } else if (!userMessage && !e.target.classList.contains('message-action-btn')) {
+                // Clicked outside of any user message, hide all actions
+                this.hideAllMessageActions();
+            }
+        });
+
+        // Hide actions when clicking outside the message container
+        document.addEventListener('click', (e) => {
+            const messageContainer = e.target.closest('#message-container');
+            const isActionButton = e.target.classList.contains('message-action-btn');
+            const isUserMessage = e.target.closest('.user-message-interactive');
+            
+            // If clicked outside message container and not on action buttons or user messages
+            if (!messageContainer && !isActionButton && !isUserMessage) {
+                this.hideAllMessageActions();
+            }
+        });
     }
 
     dispatchSendMessage(message) {
@@ -143,6 +186,27 @@ export class SimpleChatView extends EventTarget {
         this.dispatchEvent(new CustomEvent('importChat', {
             detail: { importedData: importedData }
         }));
+    }
+
+    dispatchDeleteMessage(messageId) {
+        this.dispatchEvent(new CustomEvent('deleteMessage', {
+            detail: { messageId: messageId }
+        }));
+    }
+
+    hideAllMessageActions() {
+        const allActions = this.elements.messageContainer.querySelectorAll('.message-actions');
+        allActions.forEach(actions => {
+            actions.style.display = 'none';
+        });
+    }
+
+    showMessageActions(messageElement) {
+        this.hideAllMessageActions(); // Hide any currently visible actions
+        const actions = messageElement.querySelector('.message-actions');
+        if (actions) {
+            actions.style.display = 'flex';
+        }
     }
 
     openFileImportDialog() {
@@ -196,16 +260,58 @@ export class SimpleChatView extends EventTarget {
         this.elements.userInput.value = '';
 
         let newMessageElement = document.createElement('li');
+        
+        // Add data attribute with message ID
+        newMessageElement.setAttribute('data-message-id', messageObj.id);
 
         if (isUser) {
             newMessageElement.classList.add('user-message');
-
         } else {
             newMessageElement.classList.add('bot-output');
-
         }
 
-        newMessageElement.innerHTML = messageObj.message;
+        // Create message content (no buttons initially)
+        const messageContent = document.createElement('div');
+        messageContent.classList.add('message-content');
+        
+        const messageText = document.createElement('span');
+        messageText.classList.add('message-text');
+        messageText.textContent = messageObj.message;
+        
+        messageContent.appendChild(messageText);
+        
+        // Only add interactive class and create action buttons for user messages
+        if (isUser) {
+            newMessageElement.classList.add('user-message-interactive');
+            
+            // Create action buttons container (initially hidden)
+            const actionsContainer = document.createElement('div');
+            actionsContainer.classList.add('message-actions');
+            actionsContainer.style.display = 'none';
+            
+            // Edit button
+            const editButton = document.createElement('button');
+            editButton.classList.add('message-action-btn');
+            editButton.setAttribute('data-action', 'edit');
+            editButton.setAttribute('data-message-id', messageObj.id);
+            editButton.textContent = '✏️';
+            editButton.title = 'Edit message';
+            
+            // Delete button
+            const deleteButton = document.createElement('button');
+            deleteButton.classList.add('message-action-btn');
+            deleteButton.setAttribute('data-action', 'delete');
+            deleteButton.setAttribute('data-message-id', messageObj.id);
+            deleteButton.textContent = '🗑️';
+            deleteButton.title = 'Delete message';
+            
+            actionsContainer.appendChild(editButton);
+            actionsContainer.appendChild(deleteButton);
+            newMessageElement.appendChild(actionsContainer);
+        }
+        
+        newMessageElement.appendChild(messageContent);
+
         this.elements.messageContainer.appendChild(newMessageElement);
 
         // Scroll to the bottom of the chat
@@ -216,8 +322,15 @@ export class SimpleChatView extends EventTarget {
         // TODO: Implement message update functionality
     }
 
-    removeMessageFromChat(message) {
-        // TODO: Implement message removal functionality
+    removeMessageFromChat(messageId) {
+        const messageElement = this.elements.messageContainer.querySelector(`[data-message-id="${messageId}"]`);
+        if (messageElement) {
+            messageElement.remove();
+            this.log(`Message with ID ${messageId} removed from UI`);
+            
+        } else {
+            console.warn(`Message with ID ${messageId} not found in UI`);
+        }
     }
 
     clearChatMessages() {

@@ -25,6 +25,11 @@ export class SimpleChatController {
             const importedMessages = e.detail.importedMessages;
             this.view.displayImportedMessages(importedMessages);
         });
+
+        this.model.addEventListener('messageDeleted', (e) => {
+            const messageId = e.detail.messageId;
+            this.view.removeMessageFromChat(messageId);
+        });
     }
 
     //  View Event Listeners
@@ -49,6 +54,12 @@ export class SimpleChatController {
         this.view.addEventListener('importChat', (e) => {
             const importedData = e.detail.importedData;
             this.model.importChat(importedData);
+        });
+
+        // Delete Message
+        this.view.addEventListener('deleteMessage', (e) => {
+            const messageId = e.detail.messageId;
+            this.model.deleteMessage(messageId);
         });
     }
 }
