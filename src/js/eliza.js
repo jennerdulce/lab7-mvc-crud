@@ -4,6 +4,7 @@
     * @param {string} message - The user's message to analyze
     * @returns {string} Generated bot response based on pattern matching
     */
+   
 export function getBotResponse(message) {
     /**
      * Eliza-style Pattern Matching Module
