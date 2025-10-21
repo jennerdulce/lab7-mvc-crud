@@ -31,7 +31,7 @@ export class SimpleChatController {
         this.model.addEventListener('messageAdded', (e) => {
             const message = e.detail.message;
             const isUser = message.isUser
-            this.view.appendMessageToChat(message, message.isUser);
+            this.view.appendMessageToChat(message, isUser);
         });
 
         this.model.addEventListener('chatCleared', (e) => {
@@ -40,7 +40,14 @@ export class SimpleChatController {
 
         this.model.addEventListener('chatImported', (e) => {
             const importedMessages = e.detail.importedMessages;
+        
             this.view.displayImportedMessages(importedMessages);
+        });
+
+        this.model.addEventListener('chatExported', (e) => {
+            const message = e.detail.message;
+            const exportedCount = e.detail.exportedMessages;
+            alert(`${message}\n\nExported ${exportedCount} messages.`);
         });
 
         this.model.addEventListener('messageDeleted', (e) => {

@@ -11,8 +11,42 @@ export class SimpleChatModel extends EventTarget {
         
         /** @type {Array<Object>} Array of chat messages */
         this.messages = [];
+        
+        /** @type {boolean} Debug logging flag */
+        this.DEBUG = false;
+        
+        // Load existing messages from localStorage on startup
+        this.loadFromLocalStorage();
     }
 
+    /**
+     * Log debug messages when DEBUG is enabled
+     * @param {string} msg - Message to log
+     */
+    log(msg) {
+        if (this.DEBUG) console.log(msg);
+    }
+
+    /**
+     * Load messages from localStorage on startup
+     */
+    loadFromLocalStorage() {
+        try {
+            const chatHistory = localStorage.getItem('chatHistory');
+
+            if (chatHistory) {
+                this.messages = JSON.parse(chatHistory);
+                this.log(`Model loaded ${this.messages.length} messages from localStorage`);
+
+            } else {
+                this.log('No chat history found in localStorage');
+            }
+            
+        } catch (error) {
+            console.error('Error loading chat history from localStorage:', error);
+            this.messages = []; // Reset to empty array on error
+        }
+    }
 
     /**
      * Add a new message to the chat
@@ -21,7 +55,8 @@ export class SimpleChatModel extends EventTarget {
      * @param {boolean} [isEdited=false] - Whether the message has been edited
      */
     addMessage(messageText, isUser, isEdited = false) {
-        console.log("Adding message to localStorage: ", messageText);
+        this.log("Adding message to localStorage: ", messageText);
+        
         const message = {
             id: Date.now().toString() + Math.random(),
             message: messageText,
@@ -33,7 +68,7 @@ export class SimpleChatModel extends EventTarget {
         this.messages.push(message);
         this.saveToLocalStorage();
         this.dispatchMessageAdded(message);
-        console.log("Message added: ", message);
+        this.log("Message added: ", message);
     }
 
     /**
@@ -42,11 +77,11 @@ export class SimpleChatModel extends EventTarget {
      * @param {string} newMessage - The new message content
      */
     updateMessage(messageId, newMessage) {
-        console.log("Model updating message with ID:", messageId, "New text:", newMessage);
+        this.log("Model updating message with ID:", messageId, "New text:", newMessage);
         
         // Find message in array
         const messageIndex = this.messages.findIndex(message => message.id === messageId);
-        console.log("Found message at index:", messageIndex);
+        this.log("Found message at index:", messageIndex);
         
         if (messageIndex !== -1) {
             // Update message content and mark as edited
@@ -54,7 +89,7 @@ export class SimpleChatModel extends EventTarget {
             this.messages[messageIndex].isEdited = true;
             this.messages[messageIndex].editedAt = new Date().toISOString();
             
-            console.log("Updated message:", this.messages[messageIndex]);
+            this.log("Updated message:", this.messages[messageIndex]);
             
             // Update localStorage
             this.saveToLocalStorage();
@@ -62,7 +97,8 @@ export class SimpleChatModel extends EventTarget {
             // Dispatch update event
             this.dispatchMessageUpdated(this.messages[messageIndex]);
             
-            console.log(`Message ${messageId} updated successfully`);
+            this.log(`Message ${messageId} updated successfully`);
+
         } else {
             console.warn(`Message with ID ${messageId} not found`);
         }
@@ -73,7 +109,7 @@ export class SimpleChatModel extends EventTarget {
      * @param {string} messageId - The message ID to delete
      */
     deleteMessage(messageId) {
-        console.log("Deleting message with ID:", messageId);
+        this.log("Deleting message with ID:", messageId);
         
         // Find and remove message from array
         const messageIndex = this.messages.findIndex(message => message.id === messageId);
@@ -88,7 +124,8 @@ export class SimpleChatModel extends EventTarget {
             // Dispatch delete event
             this.dispatchMessageDeleted(messageId);
             
-            console.log(`Message ${messageId} deleted successfully`);
+            this.log(`Message ${messageId} deleted successfully`);
+
         } else {
             console.warn(`Message with ID ${messageId} not found`);
         }
@@ -98,7 +135,7 @@ export class SimpleChatModel extends EventTarget {
      * Clear all chat messages
      */
     clearChat() {
-        console.log("Clearing chat messages on localStorage.. ");
+        this.log("Clearing chat messages on localStorage.. ");
         
         // Clear the messages array
         this.messages = [];
@@ -106,7 +143,7 @@ export class SimpleChatModel extends EventTarget {
         // Remove from localStorage
         try {
             localStorage.removeItem('chatHistory');
-            console.log("Chat history removed from localStorage");
+            this.log("Chat history removed from localStorage");
 
         } catch (e) {
             console.error(`Error clearing localStorage: ${e}`);
@@ -135,7 +172,10 @@ export class SimpleChatModel extends EventTarget {
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
         
-        console.log('Chat exported as text file');
+        this.log('Chat exported as text file');
+        
+        // Dispatch export success event
+        this.dispatchChatExported();
     }
 
     /**
@@ -144,7 +184,7 @@ export class SimpleChatModel extends EventTarget {
      */
     importChat(importedData) {
         try {
-            console.log("Importing chat messages:", importedData);
+            this.log("Importing chat messages:", importedData);
             
             // Clear current messages
             this.messages = [];
@@ -167,7 +207,7 @@ export class SimpleChatModel extends EventTarget {
             // Dispatch import completion event
             this.dispatchChatImported();
             
-            console.log(`Successfully imported ${this.messages.length} messages`);
+            this.log(`Successfully imported ${this.messages.length} messages`);
             
         } catch (error) {
             console.error("Error importing chat:", error);
@@ -181,6 +221,8 @@ export class SimpleChatModel extends EventTarget {
     saveToLocalStorage() {
         try {
             localStorage.setItem('chatHistory', JSON.stringify(this.messages));
+            this.log("Chat history saved to localStorage");
+
         } catch (e) {
             console.error(`Error saving to storage: ${e}`)
         }
@@ -201,7 +243,8 @@ export class SimpleChatModel extends EventTarget {
      * @param {Object} message - The message object that was updated
      */
     dispatchMessageUpdated(message) {
-        console.log('Model dispatching messageUpdated event:', message);
+        this.log('Model dispatching messageUpdated event:', message);
+        
         this.dispatchEvent(new CustomEvent('messageUpdated', {
             detail: { message }
         }))
@@ -233,8 +276,10 @@ export class SimpleChatModel extends EventTarget {
      */
     dispatchChatExported() {
         this.dispatchEvent(new CustomEvent('chatExported', {
-            // Dispatch an Alert
-
+            detail: {
+                message: "Chat exported successfully! File downloaded to your Downloads folder.",
+                exportedMessages: this.messages.length
+            }
         }))
     }
 
