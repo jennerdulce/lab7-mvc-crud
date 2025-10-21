@@ -32,6 +32,26 @@ export class SimpleChatView extends EventTarget {
         this.cacheElements();
         this.updateSendButtonState();
         this.setupEventListeners();
+        this.loadChatHistoryFromStorage();
+    }
+
+    /**
+     * Load chat history from localStorage and display it
+     * @returns {void}
+     */
+    loadChatHistoryFromStorage() {
+        try {
+            const chatHistory = localStorage.getItem('chatHistory');
+            if (chatHistory) {
+                const messages = JSON.parse(chatHistory);
+                this.log(`Loading ${messages.length} messages from localStorage`);
+                this.displayImportedMessages(messages);
+            } else {
+                this.log('No chat history found in localStorage');
+            }
+        } catch (error) {
+            console.error('Error loading chat history from localStorage:', error);
+        }
     }
 
     /**
@@ -327,7 +347,7 @@ export class SimpleChatView extends EventTarget {
         if (messageElement) {
             messageElement.remove();
             this.log(`Message with ID ${messageId} removed from UI`);
-            
+
         } else {
             console.warn(`Message with ID ${messageId} not found in UI`);
         }
