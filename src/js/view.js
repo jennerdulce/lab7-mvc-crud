@@ -85,7 +85,7 @@ export class SimpleChatView extends EventTarget {
         // Export Chat
         this.elements.exportChatButton.addEventListener('click', () => {
             this.log("Export chat clicked");
-            // Export chat functionality can be added here
+            this.dispatchExportChat();
         });
 
         // Import Chat
@@ -129,6 +129,12 @@ export class SimpleChatView extends EventTarget {
 
     dispatchClearChat() {
         this.dispatchEvent(new CustomEvent('clearChat', {
+            detail: {}
+        }));
+    }
+
+    dispatchExportChat() {
+        this.dispatchEvent(new CustomEvent('exportChat', {
             detail: {}
         }));
     }

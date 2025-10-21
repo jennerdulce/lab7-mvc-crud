@@ -59,7 +59,7 @@ export class SimpleChatModel extends EventTarget {
 
         } catch (e) {
             console.error(`Error clearing localStorage: ${e}`);
-            
+
         }
         
         // Dispatch event to notify that chat was cleared
@@ -67,7 +67,21 @@ export class SimpleChatModel extends EventTarget {
     }
 
     exportChat() {
-
+        // Create simple JSON string of messages
+        const jsonString = JSON.stringify(this.messages);
+    
+        // Create and download text file
+        const blob = new Blob([jsonString], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'chat-export.txt';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        console.log('Chat exported as text file');
     }
 
     importChat() {

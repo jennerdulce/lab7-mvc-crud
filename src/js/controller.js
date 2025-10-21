@@ -34,6 +34,11 @@ export class SimpleChatController {
         this.view.addEventListener('clearChat', (e) => {
             this.model.clearChat();
         });
+
+        // Export Chat
+        this.view.addEventListener('exportChat', (e) => {
+            this.model.exportChat();
+        });
     }
 }
 
