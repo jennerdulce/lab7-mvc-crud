@@ -108,7 +108,10 @@ body {
     color: #454545;
     font-size: .8em;
     line-height: 1.6;
-
+    word-wrap: break-word;
+    word-break: break-word;
+    hyphens: auto;
+    overflow-wrap: break-word;
 }
 
 .user-message {
@@ -120,6 +123,10 @@ body {
     color: var(--text-light);
     font-size: .8em;
     line-height: 1.6;
+    word-wrap: break-word;
+    word-break: break-word;
+    hyphens: auto;
+    overflow-wrap: break-word;
 }
 
 #user-input-container {
@@ -189,4 +196,133 @@ body {
     border-radius: .2em;
     background-color: var(--primary-color);
     color: white;
+}
+
+/* Message Actions Styles */
+.user-message {
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.user-message:hover {
+    transform: translateY(-0.06em);
+    box-shadow: 0 0.12em 0.5em rgba(0, 0, 0, 0.15);
+}
+
+.message-actions {
+    display: none;
+    position: absolute;
+    bottom: -0.5em;
+    right: -0.5em;
+    gap: 0.25em;
+    z-index: 10;
+}
+
+.message-action-btn {
+    width: 2em;
+    height: 2em;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 0.8em;
+    font-weight: bold;
+    transition: all 0.2s ease;
+    box-shadow: 0 0.12em 0.25em rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.message-action-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0.18em 0.375em rgba(0, 0, 0, 0.3);
+}
+
+.message-action-btn[data-action="edit"] {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.message-action-btn[data-action="delete"] {
+    background-color: #f44336;
+    color: white;
+}
+
+.message-action-btn[data-action="edit"]:hover {
+    background-color: #45a049;
+}
+
+.message-action-btn[data-action="delete"]:hover {
+    background-color: #da190b;
+}
+
+/* Edit functionality styles */
+.edit-textarea {
+    width: 100%;
+    min-height: 2em;
+    padding: 0.5em;
+    border: 2px solid var(--primary-color);
+    border-radius: 0.5em;
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    background-color: white;
+    color: var(--text-dark);
+    resize: vertical;
+    box-sizing: border-box;
+}
+
+.edit-textarea:focus {
+    outline: none;
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0.3em rgba(136, 93, 255, 0.3);
+}
+
+.edit-controls {
+    display: flex;
+    gap: 0.5em;
+    margin-top: 0.5em;
+    justify-content: flex-end;
+}
+
+.edit-save-btn,
+.edit-cancel-btn {
+    width: 2em;
+    height: 2em;
+    border: none;
+    border-radius: 0.3em;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: bold;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.edit-save-btn {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.edit-save-btn:hover {
+    background-color: #45a049;
+    transform: scale(1.05);
+}
+
+.edit-cancel-btn {
+    background-color: #f44336;
+    color: white;
+}
+
+.edit-cancel-btn:hover {
+    background-color: #da190b;
+    transform: scale(1.05);
+}
+
+.edited-indicator {
+    font-style: italic;
+    opacity: 0.7;
 }

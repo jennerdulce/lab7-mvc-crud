@@ -1,11 +1,21 @@
+/**
+ * Main application entry point
+ * Initializes and coordinates all MVC components
+ */
+
 import { SimpleChatModel } from "./model.js"
 import { SimpleChatView } from "./view.js"
 import { SimpleChatController } from "./controller.js"
 
+/**
+ * Initialize the chat application
+ * Sets up MVC components and establishes their connections
+ */
 function initializeApp() {
     document.addEventListener('DOMContentLoaded', () => {
         console.log('Initialize Simple Chat...');
 
+        // Instantiate MVC components
         const model = new SimpleChatModel();
         const view = new SimpleChatView();
 
@@ -18,5 +28,5 @@ function initializeApp() {
     });
 }
 
-// Actually call the initialize function
+// Bootstrap the application
 initializeApp();

@@ -1,15 +1,32 @@
+/**
+ * Controller component that coordinates between Model and View
+ * Handles event communication and business logic flow
+ */
 export class SimpleChatController {
+    /**
+     * Create a new SimpleChatController instance
+     * @param {SimpleChatModel} model - The model instance
+     * @param {SimpleChatView} view - The view instance
+     */
     constructor(model, view) {
+        /** @type {SimpleChatModel} Reference to the model */
         this.model = model;
+        
+        /** @type {SimpleChatView} Reference to the view */
         this.view = view;
     }
 
+    /**
+     * Initialize the controller and set up event listeners
+     */
     init() {
         this.setupModelListeners();
         this.setupViewListeners();
     }
 
-    // Model Event Listeners
+    /**
+     * Set up event listeners for model events
+     */
     setupModelListeners() {
         this.model.addEventListener('messageAdded', (e) => {
             const message = e.detail.message;
@@ -30,9 +47,17 @@ export class SimpleChatController {
             const messageId = e.detail.messageId;
             this.view.removeMessageFromChat(messageId);
         });
+
+        this.model.addEventListener('messageUpdated', (e) => {
+            const message = e.detail.message;
+            console.log('Controller received messageUpdated:', message);
+            this.view.updateMessageInChat(message.id, message.message);
+        });
     }
 
-    //  View Event Listeners
+    /**
+     * Set up event listeners for view events
+     */
     setupViewListeners() {
         // Send Message
         this.view.addEventListener('sendMessage', (e) => {
@@ -60,6 +85,14 @@ export class SimpleChatController {
         this.view.addEventListener('deleteMessage', (e) => {
             const messageId = e.detail.messageId;
             this.model.deleteMessage(messageId);
+        });
+
+        // Edit Message
+        this.view.addEventListener('editMessage', (e) => {
+            const messageId = e.detail.messageId;
+            const newText = e.detail.newText;
+            console.log('Controller received edit message:', messageId, newText);
+            this.model.updateMessage(messageId, newText);
         });
     }
 }

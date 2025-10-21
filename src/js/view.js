@@ -1,32 +1,26 @@
 /**
- * @fileoverview Chat Web Component with Graceful Degradation
- * Advanced web component implementation with shadow DOM and graceful degradation support
- * @author Jenner Dulce
- * @version 1.0.0
- */
-
-/**
- * ChatInterface Web Component
- * A custom HTML element that provides an interactive chat interface
- * with shadow DOM encapsulation and graceful degradation
- * @extends HTMLElement
+ * View component for chat application UI management
+ * Handles DOM manipulation, user interactions, and event dispatching
  */
 export class SimpleChatView extends EventTarget {
     /**
-     * Creates an instance of SimpleChatView
-     * Regular component (not web component)
+     * Create a new SimpleChatView instance
      */
     constructor() {
         super();
+        
+        /** @type {Object} Cache of DOM elements */
         this.elements = {};
-        /** @type {boolean} Debug flag for console logging */
+        
+        /** @type {boolean} Debug logging flag */
         this.DEBUG = false;
+        
+        /** @type {HTMLElement|null} Container element */
         this.container = null;
     }
 
     /**
-     * Initialize the view after rendering
-     * @returns {void}
+     * Initialize the view component
      */
     init() {
         this.cacheElements();
@@ -37,7 +31,6 @@ export class SimpleChatView extends EventTarget {
 
     /**
      * Load chat history from localStorage and display it
-     * @returns {void}
      */
     loadChatHistoryFromStorage() {
         try {
@@ -55,7 +48,7 @@ export class SimpleChatView extends EventTarget {
     }
 
     /**
-     * Cache DOM elements after they're rendered
+     * Cache DOM elements for efficient access
      */
     cacheElements() {
         this.elements = {
@@ -68,15 +61,32 @@ export class SimpleChatView extends EventTarget {
         };
     }
 
+    loadChatHistoryFromStorage() {
+        try {
+            const storedMessages = localStorage.getItem('chatHistory');
+            if (storedMessages) {
+                const messages = JSON.parse(storedMessages);
+                this.log(`Loading ${messages.length} messages from localStorage`);
+                this.displayImportedMessages(messages);
+            } else {
+                this.log('No chat history found in localStorage');
+            }
+        } catch (error) {
+            console.error('Error loading chat history from localStorage:', error);
+        }
+    }
+
     /**
-     * Logs messages to console when DEBUG is enabled
-     * @param {string} msg - The message to log
-     * @returns {void}
+     * Log debug messages when DEBUG is enabled
+     * @param {string} msg - Message to log
      */
     log(msg) {
         if (this.DEBUG) console.log(msg);
     }
 
+    /**
+     * Set up all event listeners for user interactions
+     */
     setupEventListeners() {
         // Send button click
         this.elements.sendButton.addEventListener('click', () => {
@@ -136,8 +146,7 @@ export class SimpleChatView extends EventTarget {
                         this.dispatchDeleteMessage(messageId);
                     }
                 } else if (action === 'edit') {
-                    // TODO: Implement edit functionality
-                    console.log('Edit functionality coming soon...');
+                    this.startEditingMessage(messageId);
                 }
                 
                 // Hide actions after clicking
@@ -169,6 +178,10 @@ export class SimpleChatView extends EventTarget {
         });
     }
 
+    /**
+     * Dispatch send message event
+     * @param {string} message - The message to send
+     */
     dispatchSendMessage(message) {
         // Dispatch sendMessage event
         this.dispatchEvent(new CustomEvent('sendMessage', {
@@ -212,6 +225,123 @@ export class SimpleChatView extends EventTarget {
         this.dispatchEvent(new CustomEvent('deleteMessage', {
             detail: { messageId: messageId }
         }));
+    }
+
+    dispatchEditMessage(messageId, newText) {
+        console.log('View dispatching edit message:', messageId, newText);
+        this.dispatchEvent(new CustomEvent('editMessage', {
+            detail: { messageId: messageId, newText: newText }
+        }));
+    }
+
+    startEditingMessage(messageId) {
+        const messageElement = this.elements.messageContainer.querySelector(`[data-message-id="${messageId}"]`);
+        if (!messageElement) return;
+
+        const messageTextElement = messageElement.querySelector('.message-text');
+        if (!messageTextElement) return;
+
+        const currentText = messageTextElement.textContent;
+        
+        // Create textarea for editing
+        const textarea = document.createElement('textarea');
+        textarea.value = currentText;
+        textarea.classList.add('edit-textarea');
+        textarea.rows = Math.max(2, Math.ceil(currentText.length / 40));
+        
+        // Create save and cancel buttons
+        const editControls = document.createElement('div');
+        editControls.classList.add('edit-controls');
+        
+        const saveButton = document.createElement('button');
+        saveButton.textContent = '✓';
+        saveButton.classList.add('edit-save-btn');
+        saveButton.title = 'Save changes';
+        
+        const cancelButton = document.createElement('button');
+        cancelButton.textContent = '✗';
+        cancelButton.classList.add('edit-cancel-btn');
+        cancelButton.title = 'Cancel editing';
+        
+        editControls.appendChild(saveButton);
+        editControls.appendChild(cancelButton);
+        
+        // Replace message text with textarea
+        messageTextElement.style.display = 'none';
+        messageTextElement.parentNode.appendChild(textarea);
+        messageTextElement.parentNode.appendChild(editControls);
+        
+        // Focus textarea and select all text
+        textarea.focus();
+        textarea.select();
+        
+        // Handle save
+        const saveEdit = () => {
+            const newText = textarea.value.trim();
+            console.log('Save edit clicked. Original:', currentText, 'New:', newText);
+            
+            if (newText && newText !== currentText) {
+                console.log('Dispatching edit message...');
+                this.dispatchEditMessage(messageId, newText);
+            } else if (!newText) {
+                alert('Message cannot be empty');
+                return; // Don't cancel edit if text is empty
+            } else {
+                console.log('No changes made to message');
+            }
+            this.cancelEdit(messageElement);
+        };
+        
+        // Handle cancel
+        const cancelEdit = () => {
+            this.cancelEdit(messageElement);
+        };
+        
+        // Event listeners
+        saveButton.addEventListener('click', saveEdit);
+        cancelButton.addEventListener('click', cancelEdit);
+        
+        // Save on Enter (without Shift), cancel on Escape
+        textarea.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                saveEdit();
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                cancelEdit();
+            }
+        });
+    }
+
+    cancelEdit(messageElement) {
+        const textarea = messageElement.querySelector('.edit-textarea');
+        const editControls = messageElement.querySelector('.edit-controls');
+        const messageText = messageElement.querySelector('.message-text');
+        
+        if (textarea) textarea.remove();
+        if (editControls) editControls.remove();
+        if (messageText) messageText.style.display = '';
+    }
+
+    updateMessageInChat(messageId, newText) {
+        const messageElement = this.elements.messageContainer.querySelector(`[data-message-id="${messageId}"]`);
+        if (messageElement) {
+            const messageTextElement = messageElement.querySelector('.message-text');
+            if (messageTextElement) {
+                messageTextElement.textContent = newText;
+                
+                // Add edited indicator
+                let editedIndicator = messageElement.querySelector('.edited-indicator');
+                if (!editedIndicator) {
+                    editedIndicator = document.createElement('span');
+                    editedIndicator.classList.add('edited-indicator');
+                    editedIndicator.textContent = ' (edited)';
+                    editedIndicator.style.fontSize = '0.7em';
+                    editedIndicator.style.opacity = '0.7';
+                    messageTextElement.appendChild(editedIndicator);
+                }
+            }
+        }
     }
 
     hideAllMessageActions() {
@@ -268,10 +398,9 @@ export class SimpleChatView extends EventTarget {
     
 
     /**
-     * Appends a new message to the chat container
-     * Creates and styles message elements, generates bot responses
-     * @param {Object} messageObj - The message object with content and user info
-     * @returns {void}
+     * Append a message to the chat interface
+     * @param {Object} messageObj - The message object
+     * @param {boolean} isUser - Whether the message is from the user
      */
     appendMessageToChat(messageObj, isUser) {
         this.log("Appending Message to Chatbox");
@@ -338,10 +467,6 @@ export class SimpleChatView extends EventTarget {
         this.elements.messageContainer.scrollTop = this.elements.messageContainer.scrollHeight;
     }
 
-    updateMessageInChat(message) {
-        // TODO: Implement message update functionality
-    }
-
     removeMessageFromChat(messageId) {
         const messageElement = this.elements.messageContainer.querySelector(`[data-message-id="${messageId}"]`);
         if (messageElement) {
@@ -373,11 +498,6 @@ export class SimpleChatView extends EventTarget {
         });
     }
 
-    /**
-     * Processes and validates user input message
-     * @param {string} msg - Raw user input message
-     * @returns {string|boolean} Processed message if valid, false if invalid
-     */
     processUserMessage(msg) {
         this.log("Processing user message...");
         let processedUserMessage = msg.trim();
@@ -390,11 +510,6 @@ export class SimpleChatView extends EventTarget {
         }
     }
 
-    /**
-     * Updates the send button's visual state based on input content
-     * Adds 'hasContent' class when input has text, removes when empty
-     * @returns {void}
-     */
     updateSendButtonState() {
         const userInput = document.getElementById('user-input');
         const sendBtn = document.getElementById('send-btn');
@@ -412,11 +527,6 @@ export class SimpleChatView extends EventTarget {
         }
     }
 
-    /**
-     * Generate a simple bot response (placeholder)
-     * @param {string} userMessage - The user's message
-     * @returns {string} Bot response
-     */
     getBotResponse(userMessage) {
         // Simple bot response logic - can be enhanced later
         const responses = [
@@ -429,11 +539,6 @@ export class SimpleChatView extends EventTarget {
         return responses[Math.floor(Math.random() * responses.length)];
     }
 
-    /**
-     * Renders the component's HTML structure and styles
-     * Sets up the shadow DOM with CSS imports and chat interface
-     * @returns {void}
-     */
     render(containerId) {
         const container = document.querySelector(containerId);
         if (!container) {
