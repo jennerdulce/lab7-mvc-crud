@@ -123,6 +123,14 @@ class ChatInterface extends HTMLElement {
         messageContainer.scrollTop = messageContainer.scrollHeight;
     }
 
+    updateMessageInChat(message) {
+
+    }
+
+    removeMessageFromChat(message) {
+
+    }
+
     /**
      * Processes and validates user input message
      * @param {string} msg - Raw user input message
