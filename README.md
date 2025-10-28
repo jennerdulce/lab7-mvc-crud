@@ -1,6 +1,6 @@
 # MVC Chat Application with CRUD Operations
 
-[Lab 7: MVC Refactor by Jenner Dulce](https://jennerdulce.github.io/lab7-mvc-crud)
+[Lab 7: MVC Refactor by Jenner Dulce](https://lab7-mvc-crud.pages.dev/)
 ## Overview
 
 A sophisticated chat application built using the Model-View-Controller (MVC) architectural pattern, featuring complete CRUD operations, persistent storage, and an interactive Eliza-style chatbot.
